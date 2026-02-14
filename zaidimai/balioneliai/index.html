@@ -16,11 +16,8 @@
             user-select: none;
         }
 
-        canvas {
-            display: block;
-        }
+        canvas { display: block; }
 
-        /* HUD */
         .hud {
             position: fixed;
             top: 1rem;
@@ -68,7 +65,6 @@
         }
         .back-btn:hover { color: #f59e0b; border-color: rgba(217, 119, 6, 0.3); }
 
-        /* Mouse helper hint */
         .mouse-hint {
             position: fixed;
             bottom: 1.5rem;
@@ -88,7 +84,25 @@
         }
         .mouse-hint.show { opacity: 1; }
 
-        /* Pop effect overlay */
+        .bomb-hint {
+            position: fixed;
+            bottom: 3.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #f97316;
+            font-size: 0.85rem;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(8px);
+            padding: 0.5rem 1.2rem;
+            border-radius: 100px;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        .bomb-hint.show { opacity: 1; }
+
         .pop-text {
             position: fixed;
             pointer-events: none;
@@ -103,7 +117,6 @@
             100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
         }
 
-        /* Combo display */
         .combo {
             position: fixed;
             top: 50%;
@@ -135,10 +148,12 @@
     <div class="hud">
         <div class="hud-item">🎈 <span class="val" id="balloonCount">0</span></div>
         <div class="hud-item">💥 <span class="val" id="popCount">0</span></div>
+        <div class="hud-item">💣 <span class="val" id="bombCount">0</span></div>
         <div class="hud-item">🐭 <span class="val" id="mouseTimer">--</span></div>
     </div>
 
     <div class="mouse-hint" id="mouseHint">🐭 Pelytė pasiruošusi! Paspausk ją!</div>
+    <div class="bomb-hint" id="bombHint">💣 Bomba paruošta! Paspausk ją!</div>
     <div class="combo" id="comboText"></div>
 
     <canvas id="game"></canvas>
@@ -155,7 +170,6 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // ==================== CONFIG ====================
     const COLORS = [
         { name: 'raudona', fill: '#ef4444', glow: 'rgba(239,68,68,0.3)' },
         { name: 'mėlyna', fill: '#3b82f6', glow: 'rgba(59,130,246,0.3)' },
@@ -165,33 +179,35 @@
         { name: 'oranžinė', fill: '#f97316', glow: 'rgba(249,115,22,0.3)' },
     ];
 
-    const GROW_RATE = 0.15;       // px per frame
-    const MAX_RADIUS = 80;
-    const SPAWN_INTERVAL = 800;   // ms
-    const MAX_BALLOONS = 60;
-    const PUSH_FORCE = 0.3;
-    const MOUSE_INTERVAL = 45000; // 45 seconds
-    const MOUSE_SPEED = 6;
-    const MOUSE_DESTROY_RADIUS = 80;
+    const GROW_RATE = 0.25;
+    const MAX_RADIUS = 90;
+    const SPAWN_INTERVAL = 700;
+    const MAX_BALLOONS = 70;
+    const PUSH_FORCE = 0.6;
+    const PUSH_OVERLAP_MULT = 1.2;
+    const MOUSE_INTERVAL = 45000;
+    const MOUSE_SPEED = 7;
+    const MOUSE_DESTROY_RADIUS = 90;
 
-    // ==================== STATE ====================
     let balloons = [];
     let particles = [];
     let popCount = 0;
+    let activeBombs = [];
     let mouseHelper = null;
-    let mouseCountdown = MOUSE_INTERVAL / 1000;
     let lastMouseTime = Date.now();
     let mouseAvailable = false;
+    let shakeAmount = 0;
+    let bombFlash = 0;
 
     // ==================== BALLOON ====================
     class Balloon {
         constructor() {
-            this.r = 5;
-            this.maxR = 25 + Math.random() * (MAX_RADIUS - 25);
+            this.r = 3;
+            this.maxR = 30 + Math.random() * (MAX_RADIUS - 30);
             this.colorIdx = Math.floor(Math.random() * COLORS.length);
             this.color = COLORS[this.colorIdx];
-            this.x = 50 + Math.random() * (W - 100);
-            this.y = 50 + Math.random() * (H - 100);
+            this.x = 60 + Math.random() * (W - 120);
+            this.y = 60 + Math.random() * (H - 120);
             this.vx = 0;
             this.vy = 0;
             this.alive = true;
@@ -199,232 +215,260 @@
             this.wobble = Math.random() * Math.PI * 2;
             this.wobbleSpeed = 0.02 + Math.random() * 0.02;
             this.string = 20 + Math.random() * 15;
+            this.growPhase = 0;
         }
 
         update() {
             if (!this.alive) return;
-
-            // Grow
             if (this.r < this.maxR) {
                 this.r += GROW_RATE;
+                this.growPhase += 0.1;
             }
-
-            // Fade in
             if (this.opacity < 1) this.opacity = Math.min(1, this.opacity + 0.03);
-
-            // Wobble
             this.wobble += this.wobbleSpeed;
 
-            // Apply velocity with damping
             this.x += this.vx;
             this.y += this.vy;
-            this.vx *= 0.95;
-            this.vy *= 0.95;
+            this.vx *= 0.92;
+            this.vy *= 0.92;
 
-            // Wall bounce
-            if (this.x - this.r < 0) { this.x = this.r; this.vx = Math.abs(this.vx) * 0.5; }
-            if (this.x + this.r > W) { this.x = W - this.r; this.vx = -Math.abs(this.vx) * 0.5; }
-            if (this.y - this.r < 0) { this.y = this.r; this.vy = Math.abs(this.vy) * 0.5; }
-            if (this.y + this.r > H) { this.y = H - this.r; this.vy = -Math.abs(this.vy) * 0.5; }
+            const m = 5;
+            if (this.x - this.r < m) { this.x = this.r + m; this.vx = Math.abs(this.vx) * 0.6 + 0.5; }
+            if (this.x + this.r > W - m) { this.x = W - this.r - m; this.vx = -Math.abs(this.vx) * 0.6 - 0.5; }
+            if (this.y - this.r < m) { this.y = this.r + m; this.vy = Math.abs(this.vy) * 0.6 + 0.5; }
+            if (this.y + this.r > H - m) { this.y = H - this.r - m; this.vy = -Math.abs(this.vy) * 0.6 - 0.5; }
         }
 
         draw() {
             if (!this.alive) return;
-            const wobbleX = Math.sin(this.wobble) * 2;
-            const wobbleY = Math.cos(this.wobble * 0.7) * 1.5;
-            const cx = this.x + wobbleX;
-            const cy = this.y + wobbleY;
+            const wobX = Math.sin(this.wobble) * 2;
+            const wobY = Math.cos(this.wobble * 0.7) * 1.5;
+            const cx = this.x + wobX;
+            const cy = this.y + wobY;
 
             ctx.save();
             ctx.globalAlpha = this.opacity;
 
+            // Squeeze when moving fast
+            const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            let sx = 1, sy = 1;
+            if (speed > 1.5) {
+                const dir = Math.atan2(this.vy, this.vx);
+                sx = 1 + Math.abs(Math.cos(dir)) * 0.08;
+                sy = 1 + Math.abs(Math.sin(dir)) * 0.08;
+            }
+
+            ctx.translate(cx, cy);
+            ctx.scale(sx, sy);
+
             // Glow
             ctx.beginPath();
-            ctx.arc(cx, cy, this.r + 8, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.r + 8, 0, Math.PI * 2);
             ctx.fillStyle = this.color.glow;
             ctx.fill();
 
-            // Body
-            const grad = ctx.createRadialGradient(
-                cx - this.r * 0.3, cy - this.r * 0.3, this.r * 0.1,
-                cx, cy, this.r
-            );
+            // Body gradient
+            const grad = ctx.createRadialGradient(-this.r * 0.3, -this.r * 0.3, this.r * 0.1, 0, 0, this.r);
             grad.addColorStop(0, '#ffffff40');
             grad.addColorStop(0.3, this.color.fill);
             grad.addColorStop(1, this.color.fill + '99');
             ctx.beginPath();
-            ctx.arc(cx, cy, this.r, 0, Math.PI * 2);
+            ctx.arc(0, 0, this.r, 0, Math.PI * 2);
             ctx.fillStyle = grad;
             ctx.fill();
 
+            // Growth pulse ring
+            if (this.r < this.maxR) {
+                const pulseR = this.r + Math.sin(this.growPhase) * 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, pulseR + 2, 0, Math.PI * 2);
+                ctx.strokeStyle = this.color.fill + '30';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
             // Shine
             ctx.beginPath();
-            ctx.arc(cx - this.r * 0.25, cy - this.r * 0.3, this.r * 0.2, 0, Math.PI * 2);
+            ctx.arc(-this.r * 0.25, -this.r * 0.3, this.r * 0.2, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(255,255,255,0.35)';
             ctx.fill();
 
+            ctx.restore();
+
             // String
+            ctx.save();
+            ctx.globalAlpha = this.opacity;
             ctx.beginPath();
             ctx.moveTo(cx, cy + this.r);
-            ctx.quadraticCurveTo(
-                cx + Math.sin(this.wobble * 2) * 8,
-                cy + this.r + this.string * 0.6,
-                cx + Math.sin(this.wobble) * 4,
-                cy + this.r + this.string
-            );
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.quadraticCurveTo(cx + Math.sin(this.wobble * 2) * 8, cy + this.r + this.string * 0.6, cx + Math.sin(this.wobble) * 4, cy + this.r + this.string);
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
             ctx.lineWidth = 1;
             ctx.stroke();
-
             ctx.restore();
         }
     }
 
     // ==================== PARTICLES ====================
     class Particle {
-        constructor(x, y, color) {
-            this.x = x;
-            this.y = y;
-            this.vx = (Math.random() - 0.5) * 8;
-            this.vy = (Math.random() - 0.5) * 8 - 3;
-            this.r = 2 + Math.random() * 4;
+        constructor(x, y, color, big) {
+            this.x = x; this.y = y;
+            const force = big ? 14 : 8;
+            this.vx = (Math.random() - 0.5) * force;
+            this.vy = (Math.random() - 0.5) * force - (big ? 5 : 3);
+            this.r = big ? (3 + Math.random() * 6) : (2 + Math.random() * 4);
             this.color = color;
             this.life = 1;
-            this.decay = 0.02 + Math.random() * 0.02;
+            this.decay = big ? 0.015 : (0.02 + Math.random() * 0.02);
+        }
+        update() { this.x += this.vx; this.y += this.vy; this.vy += 0.15; this.life -= this.decay; }
+        draw() {
+            ctx.save(); ctx.globalAlpha = this.life;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = this.color; ctx.fill(); ctx.restore();
+        }
+    }
+
+    // ==================== BOMB ====================
+    class Bomb {
+        constructor(x, y) {
+            this.x = x; this.y = y; this.r = 22;
+            this.age = 0; this.alive = true; this.bobPhase = Math.random() * Math.PI * 2;
+            // Auto-expire after 15 seconds
+            this.maxAge = 900; // ~15s at 60fps
         }
         update() {
-            this.x += this.vx;
-            this.y += this.vy;
-            this.vy += 0.15;
-            this.life -= this.decay;
+            this.age++;
+            this.bobPhase += 0.06;
+            this.y += Math.sin(this.bobPhase) * 0.3;
+            if (this.age > this.maxAge) this.alive = false;
         }
         draw() {
-            ctx.save();
-            ctx.globalAlpha = this.life;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
+            if (!this.alive) return;
+            ctx.save(); ctx.translate(this.x, this.y);
+
+            // Urgency flash when expiring soon
+            const remaining = (this.maxAge - this.age) / this.maxAge;
+            const pulse = 0.6 + Math.sin(this.age * (remaining < 0.3 ? 0.2 : 0.08)) * 0.4;
+
+            ctx.beginPath(); ctx.arc(0, 0, this.r + 15, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(249, 115, 22, ${0.12 * pulse})`;
             ctx.fill();
+
+            ctx.font = `${this.r * 2}px serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('💣', 0, 0);
+
+            // Ring
+            ctx.beginPath();
+            ctx.arc(0, 0, this.r + 10 + Math.sin(this.age * 0.08) * 5, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(249, 115, 22, ${0.3 * pulse})`;
+            ctx.lineWidth = 2; ctx.stroke();
+
             ctx.restore();
+        }
+        isHit(mx, my) {
+            return Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2) < this.r + 25;
         }
     }
 
     // ==================== MOUSE HELPER ====================
     class MouseHelper {
         constructor() {
-            this.x = -40;
-            this.y = H * 0.3 + Math.random() * H * 0.4;
-            this.targetY = this.y;
-            this.active = true;
-            this.clicked = false;
-            this.running = false;
-            this.runX = 0;
-            this.size = 30;
-            this.wobble = 0;
-            this.trail = [];
+            this.startY = H * 0.15 + Math.random() * H * 0.7;
+            this.x = -40; this.y = this.startY;
+            this.active = true; this.clicked = false; this.running = false;
+            this.size = 30; this.wobble = 0; this.trail = [];
+            this.pathPoints = this.generatePath();
+            this.pathIndex = 0;
+        }
+
+        generatePath() {
+            const points = [];
+            const segments = 5 + Math.floor(Math.random() * 5);
+            const segWidth = (W + 100) / segments;
+            const style = Math.floor(Math.random() * 5);
+
+            for (let i = 0; i <= segments; i++) {
+                const px = -50 + i * segWidth;
+                let py;
+                switch (style) {
+                    case 0: // Wild zigzag
+                        py = H * 0.1 + Math.random() * H * 0.8; break;
+                    case 1: // Big sine wave
+                        py = H * 0.5 + Math.sin(i * 1.3) * H * 0.38; break;
+                    case 2: // Bounce top-bottom
+                        py = (i % 2 === 0) ? H * 0.1 + Math.random() * H * 0.25 : H * 0.65 + Math.random() * H * 0.25; break;
+                    case 3: // Spiral pattern
+                        const mid = segments / 2;
+                        const dist = Math.abs(i - mid) / mid;
+                        py = H * 0.5 + (dist * H * 0.4) * (i % 2 === 0 ? -1 : 1); break;
+                    case 4: // Diagonal slash
+                        py = H * 0.1 + (i / segments) * H * 0.8 + (Math.random() - 0.5) * H * 0.2; break;
+                }
+                points.push({ x: px, y: Math.max(40, Math.min(H - 40, py)) });
+            }
+            points.push({ x: W + 60, y: H * 0.15 + Math.random() * H * 0.7 });
+            return points;
         }
 
         update() {
             if (!this.active) return;
-
             if (!this.clicked) {
-                // Just hovering, waiting to be clicked
-                this.wobble += 0.05;
-                this.y = this.targetY + Math.sin(this.wobble) * 10;
-                // Slowly drift in
-                if (this.x < W * 0.85) {
-                    this.x += 1;
-                }
+                this.wobble += 0.04;
+                this.y = this.startY + Math.sin(this.wobble) * 15;
+                if (this.x < 80) this.x += 0.8;
             } else if (this.running) {
-                // Running across screen destroying balloons
-                this.x += MOUSE_SPEED;
-                this.y += Math.sin(this.x * 0.03) * 3;
+                if (this.pathIndex < this.pathPoints.length) {
+                    const target = this.pathPoints[this.pathIndex];
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < MOUSE_SPEED * 2) { this.pathIndex++; }
+                    else { this.x += (dx / dist) * MOUSE_SPEED; this.y += (dy / dist) * MOUSE_SPEED; }
+                } else { this.active = false; }
 
-                // Trail
-                this.trail.push({ x: this.x, y: this.y, life: 1 });
+                if (Math.random() > 0.3) this.trail.push({ x: this.x, y: this.y, life: 1 });
 
-                // Destroy nearby balloons
                 for (const b of balloons) {
                     if (!b.alive) continue;
-                    const dx = b.x - this.x;
-                    const dy = b.y - this.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < MOUSE_DESTROY_RADIUS + b.r) {
-                        popBalloon(b);
-                    }
-                }
-
-                if (this.x > W + 50) {
-                    this.active = false;
+                    const dx = b.x - this.x; const dy = b.y - this.y;
+                    if (Math.sqrt(dx * dx + dy * dy) < MOUSE_DESTROY_RADIUS + b.r) popBalloon(b, true);
                 }
             }
-
-            // Update trail
-            this.trail = this.trail.filter(t => {
-                t.life -= 0.04;
-                return t.life > 0;
-            });
+            this.trail = this.trail.filter(t => { t.life -= 0.04; return t.life > 0; });
         }
 
         draw() {
             if (!this.active) return;
-
-            // Trail
             for (const t of this.trail) {
-                ctx.save();
-                ctx.globalAlpha = t.life * 0.3;
-                ctx.beginPath();
-                ctx.arc(t.x, t.y, 12, 0, Math.PI * 2);
-                ctx.fillStyle = '#4ade80';
-                ctx.fill();
-                ctx.restore();
+                ctx.save(); ctx.globalAlpha = t.life * 0.25;
+                ctx.beginPath(); ctx.arc(t.x, t.y, 10 + (1 - t.life) * 15, 0, Math.PI * 2);
+                ctx.fillStyle = '#4ade80'; ctx.fill(); ctx.restore();
             }
-
-            ctx.save();
-            ctx.translate(this.x, this.y);
-
-            if (this.running) {
-                // Running effect - slight tilt
-                ctx.rotate(Math.sin(this.x * 0.1) * 0.1);
+            ctx.save(); ctx.translate(this.x, this.y);
+            if (this.running && this.pathIndex < this.pathPoints.length) {
+                const target = this.pathPoints[this.pathIndex];
+                ctx.rotate(Math.atan2(target.y - this.y, target.x - this.x) * 0.15);
             }
-
-            // Glow
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size + 10, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(74, 222, 128, 0.15)';
-            ctx.fill();
-
-            // Body
+            ctx.beginPath(); ctx.arc(0, 0, this.size + 10, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(74, 222, 128, 0.15)'; ctx.fill();
             ctx.font = `${this.size * 1.8}px serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText('🐭', 0, 0);
-
-            // Click hint when not yet clicked
-            if (!this.clicked && !this.running) {
+            if (!this.clicked) {
                 const pulse = 0.5 + Math.sin(Date.now() * 0.005) * 0.5;
                 ctx.globalAlpha = pulse;
-                ctx.beginPath();
-                ctx.arc(0, 0, this.size + 20, 0, Math.PI * 2);
-                ctx.strokeStyle = '#4ade80';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                ctx.beginPath(); ctx.arc(0, 0, this.size + 20, 0, Math.PI * 2);
+                ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2; ctx.stroke();
             }
-
             ctx.restore();
         }
 
-        isHit(mx, my) {
-            const dx = mx - this.x;
-            const dy = my - this.y;
-            return Math.sqrt(dx * dx + dy * dy) < this.size + 15;
-        }
+        isHit(mx, my) { return Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2) < this.size + 15; }
 
         activate() {
-            this.clicked = true;
-            this.running = true;
-            this.x = -30;
-            this.y = H / 2;
+            this.clicked = true; this.running = true;
+            this.x = this.pathPoints[0].x; this.y = this.pathPoints[0].y; this.pathIndex = 1;
         }
     }
 
@@ -432,62 +476,54 @@
     function resolvePush() {
         for (let i = 0; i < balloons.length; i++) {
             for (let j = i + 1; j < balloons.length; j++) {
-                const a = balloons[i];
-                const b = balloons[j];
+                const a = balloons[i], b = balloons[j];
                 if (!a.alive || !b.alive) continue;
-
-                const dx = b.x - a.x;
-                const dy = b.y - a.y;
+                const dx = b.x - a.x, dy = b.y - a.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 const minDist = a.r + b.r;
 
-                if (dist < minDist && dist > 0) {
-                    const overlap = (minDist - dist) / 2;
-                    const nx = dx / dist;
-                    const ny = dy / dist;
+                if (dist < minDist && dist > 0.1) {
+                    const overlap = minDist - dist;
+                    const nx = dx / dist, ny = dy / dist;
+                    const force = PUSH_FORCE + overlap * PUSH_OVERLAP_MULT * 0.1;
+                    const totalR = a.r + b.r;
+                    const ratioA = b.r / totalR, ratioB = a.r / totalR;
 
-                    a.vx -= nx * PUSH_FORCE * overlap;
-                    a.vy -= ny * PUSH_FORCE * overlap;
-                    b.vx += nx * PUSH_FORCE * overlap;
-                    b.vy += ny * PUSH_FORCE * overlap;
+                    a.vx -= nx * force * ratioA;
+                    a.vy -= ny * force * ratioA;
+                    b.vx += nx * force * ratioB;
+                    b.vy += ny * force * ratioB;
+
+                    // Immediate separation
+                    const sep = overlap * 0.3;
+                    a.x -= nx * sep * ratioA; a.y -= ny * sep * ratioA;
+                    b.x += nx * sep * ratioB; b.y += ny * sep * ratioB;
                 }
             }
         }
     }
 
-    // ==================== POP LOGIC ====================
-    function popBalloon(b) {
+    // ==================== POP & BOMB ====================
+    function popBalloon(b, fromMouse) {
         if (!b.alive) return;
-        b.alive = false;
-        popCount++;
-
-        // Spawn particles
-        for (let i = 0; i < 12; i++) {
-            particles.push(new Particle(b.x, b.y, b.color.fill));
-        }
+        b.alive = false; popCount++;
+        for (let i = 0; i < (fromMouse ? 8 : 12); i++) particles.push(new Particle(b.x, b.y, b.color.fill, false));
+        shakeAmount = Math.max(shakeAmount, fromMouse ? 1 : 3);
     }
 
     function findTouchingGroup(clicked) {
-        // BFS to find all connected same-color balloons
         const group = [clicked];
         const visited = new Set([balloons.indexOf(clicked)]);
         const queue = [clicked];
-
         while (queue.length > 0) {
             const curr = queue.shift();
             for (let i = 0; i < balloons.length; i++) {
                 if (visited.has(i) || !balloons[i].alive) continue;
                 const other = balloons[i];
                 if (other.colorIdx !== curr.colorIdx) continue;
-
-                const dx = other.x - curr.x;
-                const dy = other.y - curr.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < curr.r + other.r + 5) { // small tolerance
-                    visited.add(i);
-                    group.push(other);
-                    queue.push(other);
+                const dx = other.x - curr.x, dy = other.y - curr.y;
+                if (Math.sqrt(dx * dx + dy * dy) < curr.r + other.r + 8) {
+                    visited.add(i); group.push(other); queue.push(other);
                 }
             }
         }
@@ -497,30 +533,56 @@
     function showPopText(x, y, count, color) {
         const el = document.createElement('div');
         el.className = 'pop-text';
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-        el.style.color = color;
-        el.textContent = count > 1 ? `+${count}` : 'Pop!';
+        el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color;
+        el.textContent = count >= 3 ? `💣 +${count}` : count > 1 ? `+${count}` : 'Pop!';
+        if (count >= 3) el.style.fontSize = '2rem';
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 800);
     }
 
     function showCombo(count) {
-        if (count < 3) return;
+        if (count < 2) return;
         const el = document.getElementById('comboText');
-        const messages = ['Puiku!', 'Nuostabu!', 'Bomba!', 'Šedevras!', 'LEGENDINIS!'];
-        const idx = Math.min(Math.floor((count - 3) / 2), messages.length - 1);
-        el.textContent = messages[idx] + ' ×' + count;
+        const msgs = ['Gerai!', 'Puiku!', 'Nuostabu!', 'Bomba!', 'Šedevras!', 'LEGENDINIS!'];
+        el.textContent = msgs[Math.min(count - 2, msgs.length - 1)] + ' ×' + count;
         el.classList.add('show');
         setTimeout(() => el.classList.remove('show'), 1200);
     }
 
-    // ==================== CLICK HANDLER ====================
-    canvas.addEventListener('click', (e) => {
-        const mx = e.clientX;
-        const my = e.clientY;
+    function detonateBomb(bomb) {
+        bomb.alive = false; shakeAmount = 15; bombFlash = 10;
+        const sorted = balloons.filter(b => b.alive).sort((a, b) =>
+            Math.sqrt((a.x - bomb.x) ** 2 + (a.y - bomb.y) ** 2) -
+            Math.sqrt((b.x - bomb.x) ** 2 + (b.y - bomb.y) ** 2)
+        );
+        const toDestroy = Math.ceil(sorted.length * 0.5);
+        for (let i = 0; i < toDestroy; i++) {
+            const b = sorted[i];
+            setTimeout(() => {
+                if (b.alive) {
+                    popBalloon(b, false);
+                    for (let j = 0; j < 6; j++) particles.push(new Particle(b.x, b.y, b.color.fill, true));
+                }
+            }, i * 30);
+        }
+        for (let i = 0; i < 30; i++) particles.push(new Particle(bomb.x, bomb.y, '#f97316', true));
+        showCombo(toDestroy);
+    }
 
-        // Check mouse helper first
+    // ==================== CLICK ====================
+    canvas.addEventListener('click', (e) => {
+        const mx = e.clientX, my = e.clientY;
+
+        // Bombs
+        for (let i = activeBombs.length - 1; i >= 0; i--) {
+            if (activeBombs[i].alive && activeBombs[i].isHit(mx, my)) {
+                detonateBomb(activeBombs[i]);
+                document.getElementById('bombHint').classList.remove('show');
+                return;
+            }
+        }
+
+        // Mouse
         if (mouseHelper && mouseHelper.active && !mouseHelper.clicked) {
             if (mouseHelper.isHit(mx, my)) {
                 mouseHelper.activate();
@@ -529,41 +591,39 @@
             }
         }
 
-        // Check balloons (reverse order = top first)
+        // Balloons
         for (let i = balloons.length - 1; i >= 0; i--) {
             const b = balloons[i];
             if (!b.alive) continue;
-
-            const dx = mx - b.x;
-            const dy = my - b.y;
-            if (Math.sqrt(dx * dx + dy * dy) < b.r) {
+            if (Math.sqrt((mx - b.x) ** 2 + (my - b.y) ** 2) < b.r) {
                 const group = findTouchingGroup(b);
-                if (group.length >= 1) {
-                    let cx = 0, cy = 0;
-                    for (const g of group) {
-                        cx += g.x; cy += g.y;
-                        popBalloon(g);
-                    }
-                    cx /= group.length;
-                    cy /= group.length;
-                    showPopText(cx, cy, group.length, b.color.fill);
-                    showCombo(group.length);
+                let cx = 0, cy = 0;
+                for (const g of group) { cx += g.x; cy += g.y; popBalloon(g, false); }
+                cx /= group.length; cy /= group.length;
+                showPopText(cx, cy, group.length, b.color.fill);
+                showCombo(group.length);
+
+                // Award bomb for 3+
+                if (group.length >= 3) {
+                    const bx = Math.max(40, Math.min(W - 40, cx + (Math.random() - 0.5) * 60));
+                    const by = Math.max(40, Math.min(H - 40, cy + (Math.random() - 0.5) * 60));
+                    activeBombs.push(new Bomb(bx, by));
+                    document.getElementById('bombHint').classList.add('show');
+                    setTimeout(() => document.getElementById('bombHint').classList.remove('show'), 3000);
                 }
                 break;
             }
         }
     });
 
-    // ==================== SPAWN ====================
+    // ==================== SPAWN & MOUSE TIMER ====================
     let lastSpawn = 0;
     function spawnBalloon(time) {
         if (time - lastSpawn > SPAWN_INTERVAL && balloons.filter(b => b.alive).length < MAX_BALLOONS) {
-            balloons.push(new Balloon());
-            lastSpawn = time;
+            balloons.push(new Balloon()); lastSpawn = time;
         }
     }
 
-    // ==================== MOUSE TIMER ====================
     function updateMouseTimer() {
         const elapsed = Date.now() - lastMouseTime;
         const remaining = Math.max(0, Math.ceil((MOUSE_INTERVAL - elapsed) / 1000));
@@ -579,8 +639,7 @@
         }
 
         if (mouseHelper && !mouseHelper.active) {
-            mouseAvailable = false;
-            mouseHelper = null;
+            mouseAvailable = false; mouseHelper = null;
             lastMouseTime = Date.now();
             timerEl.textContent = Math.ceil(MOUSE_INTERVAL / 1000) + 's';
             document.getElementById('mouseHint').classList.remove('show');
@@ -589,49 +648,44 @@
 
     // ==================== GAME LOOP ====================
     function loop(time) {
-        ctx.clearRect(0, 0, W, H);
+        ctx.save();
+        if (shakeAmount > 0) {
+            ctx.translate((Math.random() - 0.5) * shakeAmount * 2, (Math.random() - 0.5) * shakeAmount * 2);
+            shakeAmount *= 0.85;
+            if (shakeAmount < 0.3) shakeAmount = 0;
+        }
 
-        // Background gradient
+        ctx.clearRect(-10, -10, W + 20, H + 20);
         const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W, H) * 0.7);
-        bgGrad.addColorStop(0, '#111827');
-        bgGrad.addColorStop(1, '#0a0e17');
-        ctx.fillStyle = bgGrad;
-        ctx.fillRect(0, 0, W, H);
+        bgGrad.addColorStop(0, '#111827'); bgGrad.addColorStop(1, '#0a0e17');
+        ctx.fillStyle = bgGrad; ctx.fillRect(-10, -10, W + 20, H + 20);
 
-        // Spawn
+        if (bombFlash > 0) {
+            ctx.fillStyle = `rgba(249, 115, 22, ${bombFlash * 0.03})`;
+            ctx.fillRect(-10, -10, W + 20, H + 20);
+            bombFlash--;
+        }
+
         spawnBalloon(time);
-
-        // Physics
         resolvePush();
-
-        // Update & draw balloons
-        for (const b of balloons) {
-            b.update();
-        }
-        for (const b of balloons) {
-            b.draw();
-        }
-
-        // Clean dead
+        for (const b of balloons) b.update();
+        for (const b of balloons) b.draw();
         balloons = balloons.filter(b => b.alive);
 
-        // Particles
-        for (const p of particles) {
-            p.update();
-            p.draw();
-        }
+        for (const bomb of activeBombs) { bomb.update(); bomb.draw(); }
+        activeBombs = activeBombs.filter(b => b.alive);
+
+        for (const p of particles) { p.update(); p.draw(); }
         particles = particles.filter(p => p.life > 0);
 
-        // Mouse helper
         updateMouseTimer();
-        if (mouseHelper) {
-            mouseHelper.update();
-            mouseHelper.draw();
-        }
+        if (mouseHelper) { mouseHelper.update(); mouseHelper.draw(); }
 
-        // HUD
+        ctx.restore();
+
         document.getElementById('balloonCount').textContent = balloons.length;
         document.getElementById('popCount').textContent = popCount;
+        document.getElementById('bombCount').textContent = activeBombs.filter(b => b.alive).length;
 
         requestAnimationFrame(loop);
     }
