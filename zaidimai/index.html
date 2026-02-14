@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Žaidimai — Evaldo Karmazos Laboratorija</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0e17;
+            --bg-card: #111827;
+            --amber: #d97706;
+            --amber-glow: #f59e0b;
+            --moss: #4ade80;
+            --text-primary: #e5e7eb;
+            --text-muted: #9ca3af;
+            --card-border: rgba(217, 119, 6, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Subtle floating particles */
+        .particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--amber);
+            opacity: 0.08;
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            20% { opacity: 0.08; }
+            80% { opacity: 0.08; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover { color: var(--amber); }
+
+        /* Hero section with pulsing photo */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .photo-frame {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin: 0 auto 2rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-frame::before {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            background: conic-gradient(var(--amber), var(--moss), var(--amber));
+            animation: spinGlow 6s linear infinite;
+            opacity: 0.5;
+        }
+
+        @keyframes spinGlow {
+            to { transform: rotate(360deg); }
+        }
+
+        .photo-frame img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+            border: 3px solid var(--bg-deep);
+            animation: pulsePhoto 4s ease-in-out infinite;
+        }
+
+        .photo-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            position: relative;
+            z-index: 1;
+            border: 3px solid var(--bg-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            animation: pulsePhoto 4s ease-in-out infinite;
+        }
+
+        @keyframes pulsePhoto {
+            0%, 100% { filter: brightness(0.7); transform: scale(1); }
+            50% { filter: brightness(1.1); transform: scale(1.03); }
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--amber-glow), var(--moss));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero .subtitle {
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            line-height: 1.7;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .hero .subtitle em {
+            color: var(--amber);
+            font-style: normal;
+        }
+
+        /* Game cards */
+        .games-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .game-card {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at var(--mx, 50%) var(--my, 50%), rgba(217, 119, 6, 0.06), transparent 60%);
+            pointer-events: none;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        .game-card:hover {
+            border-color: rgba(217, 119, 6, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(217, 119, 6, 0.1);
+        }
+
+        .game-card:hover::after { opacity: 1; }
+
+        .game-icon {
+            font-size: 3rem;
+            flex-shrink: 0;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(217, 119, 6, 0.08);
+            border-radius: 14px;
+        }
+
+        .game-info h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            margin-bottom: 0.4rem;
+            color: var(--amber-glow);
+        }
+
+        .game-info p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .game-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--amber);
+            color: var(--bg-deep);
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .game-badge.coming {
+            background: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--amber);
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 2rem; }
+            .game-card { flex-direction: column; text-align: center; }
+            .container { padding: 2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <a href="../" class="back-link">← Grįžti į laboratoriją</a>
+
+        <div class="hero">
+            <div class="photo-frame">
+                <!-- Pakeisk src į savo nuotrauką, pvz.: src="nuotrauka.jpg" -->
+                <div class="photo-placeholder">🎮</div>
+                <!-- <img src="evaldas.jpg" alt="Evaldas"> -->
+            </div>
+
+            <h1>Keisti žaidimai</h1>
+            <p class="subtitle">
+                Čia niekas nelaimi ir niekas nepralaimi.<br>
+                Čia tiesiog <em>vyksta keisti dalykai</em>.<br>
+                Paspaudinėk. Pažiūrėk, kas nutiks.
+            </p>
+        </div>
+
+        <div class="games-grid">
+            <a href="balioneliai/" class="game-card" onmousemove="this.style.setProperty('--mx', (event.offsetX/this.offsetWidth*100)+'%'); this.style.setProperty('--my', (event.offsetY/this.offsetHeight*100)+'%');">
+                <span class="game-badge">Naujas!</span>
+                <div class="game-icon">🎈</div>
+                <div class="game-info">
+                    <h3>Balionėliai</h3>
+                    <p>Jie auga, stumiasi, sprogsta. O kartais atbėga pelytė ir padaro tvarką.</p>
+                </div>
+            </a>
+
+            <div class="game-card" style="opacity: 0.4; cursor: default;">
+                <span class="game-badge coming">Greitai</span>
+                <div class="game-icon">🌀</div>
+                <div class="game-info">
+                    <h3>???</h3>
+                    <p>Kažkas keisto jau bręsta laboratorijoje...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><a href="https://evaldaskarmaza.lt">evaldaskarmaza.lt</a> · Laboratorija · 2026</p>
+        </div>
+    </div>
+
+    <script>
+        // Generate floating particles
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 6 + 3;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            container.appendChild(p);
+        }
+    </script>
+</body>
+</html>
