@@ -3,322 +3,432 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaldas Karmaza</title>
+    <title>Durys, kurios veda kitur</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bone: #e8e0d4;
-            --ink: #1a1a18;
-            --moss: #4a5a3c;
-            --moss-light: #6b7d5a;
-            --amber: #c4944a;
-            --fog: #d0cbc2;
-            --deep: #0d0d0c;
+            --bg-deep: #0a0e17;
+            --bg-card: #111827;
+            --amber: #d97706;
+            --amber-glow: #f59e0b;
+            --moss: #4ade80;
+            --text-primary: #e5e7eb;
+            --text-muted: #9ca3af;
+            --card-border: rgba(217, 119, 6, 0.12);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: var(--deep);
-            color: var(--bone);
-            font-family: 'IBM Plex Mono', monospace;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            font-family: 'Nunito', sans-serif;
             min-height: 100vh;
-            overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        body::after {
-            content: '';
+        /* ===== Subtle background particles ===== */
+        .bg-particles {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
-            z-index: 1000;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .bg-particles span {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--amber);
+            opacity: 0.04;
+            animation: drift linear infinite;
+        }
+        @keyframes drift {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.04; }
+            90% { opacity: 0.04; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
 
-        .page { max-width: 860px; margin: 0 auto; padding: 6vh 2rem 4rem; }
-
-        .header {
-            margin-bottom: 5rem;
-            animation: fadeIn 1.2s ease-out;
+        /* ===== Container ===== */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
         }
 
-        .name-tag {
-            font-size: 0.65rem;
-            letter-spacing: 0.5em;
-            text-transform: uppercase;
-            color: var(--moss-light);
-            margin-bottom: 1.5rem;
-            font-weight: 300;
-        }
-
-        h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(2.2rem, 5.5vw, 4rem);
-            font-weight: 400;
-            line-height: 1.15;
-            margin-bottom: 1.2rem;
-        }
-
-        h1 em { font-style: italic; color: var(--amber); }
-
-        .intro {
-            font-size: 0.82rem;
-            color: var(--fog);
-            font-weight: 300;
-            line-height: 1.8;
-            max-width: 520px;
-            opacity: 0.6;
-        }
-
-        .section {
+        /* ===== Hero with pulsing photo ===== */
+        .hero {
+            text-align: center;
             margin-bottom: 3.5rem;
-            animation: fadeIn 1.5s ease-out both;
         }
 
-        .section:nth-child(2) { animation-delay: 0.15s; }
-        .section:nth-child(3) { animation-delay: 0.3s; }
-        .section:nth-child(4) { animation-delay: 0.45s; }
-        .section:nth-child(5) { animation-delay: 0.6s; }
-
-        .section-label {
-            font-size: 0.6rem;
-            letter-spacing: 0.35em;
-            text-transform: uppercase;
-            color: var(--moss);
-            margin-bottom: 1rem;
-            font-weight: 400;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(74, 90, 60, 0.15);
+        .photo-ring {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            margin: 0 auto 2rem;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
+        .photo-ring::before {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            background: conic-gradient(var(--amber), transparent, var(--moss), transparent, var(--amber));
+            animation: ringRotate 8s linear infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes ringRotate {
+            to { transform: rotate(360deg); }
+        }
+
+        .photo-ring img {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+            border: 3px solid var(--bg-deep);
+            animation: photoPulse 5s ease-in-out infinite;
+        }
+
+        @keyframes photoPulse {
+            0%, 100% { filter: brightness(0.75); transform: scale(1); }
+            50% { filter: brightness(1.1); transform: scale(1.02); }
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 em {
+            background: linear-gradient(135deg, var(--amber-glow), var(--moss));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-style: italic;
+        }
+
+        .hero .subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ===== Door section titles ===== */
+        .door-section {
+            margin-bottom: 2rem;
+        }
+
+        .door-label {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            padding-left: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .door-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* ===== Door cards ===== */
         .door {
             display: block;
-            padding: 0.9rem 0;
-            border-bottom: 1px solid rgba(74, 90, 60, 0.08);
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 0.75rem;
             text-decoration: none;
-            color: var(--bone);
-            transition: all 0.35s ease;
+            color: var(--text-primary);
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
             position: relative;
+            overflow: hidden;
+        }
+
+        .door::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.03), transparent);
+            transition: left 0.6s;
         }
 
         .door:hover {
-            padding-left: 1rem;
-            color: var(--amber);
+            border-color: rgba(217, 119, 6, 0.35);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(217, 119, 6, 0.08);
         }
 
-        .door:hover .door-badge { color: var(--amber); opacity: 1; }
+        .door:hover::before {
+            left: 100%;
+        }
 
-        .door-name {
-            font-family: 'Cormorant Garamond', serif;
+        .door-title {
+            font-family: 'Playfair Display', serif;
             font-size: 1.3rem;
-            font-weight: 500;
-            margin-bottom: 0.2rem;
+            font-weight: 700;
+            color: var(--amber-glow);
+            margin-bottom: 0.25rem;
         }
 
-        .door-hint {
-            font-size: 0.72rem;
-            color: var(--fog);
-            opacity: 0.4;
-            font-weight: 300;
+        .door-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
         }
 
         .door-badge {
             position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 0.58rem;
-            letter-spacing: 0.12em;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
             text-transform: uppercase;
-            color: var(--moss);
-            opacity: 0.35;
-            transition: all 0.35s ease;
+            letter-spacing: 0.04em;
         }
 
-        .door-badge.open { color: var(--moss-light); opacity: 0.75; }
-        .door-badge.open::before { content: '● '; color: var(--moss-light); }
-        .door-badge.locked::before { content: '○ '; }
+        .badge-open {
+            background: var(--moss);
+            color: var(--bg-deep);
+        }
 
+        .badge-soon {
+            background: rgba(156, 163, 175, 0.2);
+            color: var(--text-muted);
+        }
+
+        .badge-locked {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6b7280;
+        }
+
+        .badge-new {
+            background: var(--amber);
+            color: var(--bg-deep);
+        }
+
+        /* ===== Sub-doors (Jaunimui, Artimiesiems) ===== */
         .sub-doors {
-            padding-left: 1.5rem;
-            border-left: 1px solid rgba(74, 90, 60, 0.1);
-            margin-top: 0.3rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
         }
 
         .sub-door {
             display: block;
-            padding: 0.6rem 0;
+            background: rgba(17, 24, 39, 0.6);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
             text-decoration: none;
-            color: var(--fog);
-            transition: all 0.3s ease;
-            opacity: 0.6;
+            color: var(--text-primary);
+            transition: all 0.3s;
         }
 
-        .sub-door:hover { padding-left: 0.8rem; color: var(--amber); opacity: 1; }
-
-        .sub-door-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.05rem;
-            font-weight: 500;
+        .sub-door:hover {
+            border-color: rgba(217, 119, 6, 0.2);
+            background: rgba(217, 119, 6, 0.04);
         }
 
-        .sub-door-hint {
-            font-size: 0.65rem;
-            color: var(--fog);
-            opacity: 0.4;
-            font-weight: 300;
+        .sub-door-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 0.15rem;
         }
 
+        .sub-door-desc {
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        /* ===== Footer ===== */
         .footer {
-            margin-top: 4rem;
+            text-align: center;
+            margin-top: 3rem;
             padding-top: 2rem;
-            border-top: 1px solid rgba(74, 90, 60, 0.1);
-            animation: fadeIn 2s ease-out 0.8s both;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            color: #6b7280;
+            font-size: 0.85rem;
         }
 
-        .footer-line {
-            font-size: 0.68rem;
-            color: var(--fog);
-            opacity: 0.25;
-            font-weight: 300;
-            line-height: 2;
-        }
-
-        .footer-line a {
-            color: var(--moss-light);
+        .footer a {
+            color: var(--text-muted);
             text-decoration: none;
-            border-bottom: 1px solid rgba(107, 125, 90, 0.2);
-            transition: all 0.3s ease;
+            transition: color 0.3s;
         }
 
-        .footer-line a:hover { color: var(--amber); border-color: var(--amber); }
-
-        .glow { position: fixed; border-radius: 50%; pointer-events: none; }
-
-        .glow-1 {
-            width: 450px; height: 450px;
-            background: radial-gradient(circle, rgba(74, 90, 60, 0.07), transparent 70%);
-            top: 15%; right: -120px;
-            animation: drift 14s ease-in-out infinite alternate;
+        .footer a:hover {
+            color: var(--amber);
         }
 
-        .glow-2 {
-            width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(196, 148, 74, 0.04), transparent 70%);
-            bottom: 8%; left: -80px;
-            animation: drift 17s ease-in-out infinite alternate-reverse;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes drift {
-            from { transform: translate(0, 0); }
-            to { transform: translate(25px, -15px); }
-        }
-
+        /* ===== Responsive ===== */
         @media (max-width: 600px) {
-            .page { padding: 4vh 1.2rem 3rem; }
-            .door-badge { display: none; }
-            .sub-doors { padding-left: 1rem; }
+            .container { padding: 2rem 1rem 3rem; }
+            .hero h1 { font-size: 2rem; }
+            .sub-doors { grid-template-columns: 1fr; }
+            .photo-ring { width: 130px; height: 130px; }
+            .photo-ring img { width: 120px; height: 120px; }
         }
     </style>
 </head>
 <body>
-    <div class="glow glow-1"></div>
-    <div class="glow glow-2"></div>
 
-    <div class="page">
-        <header class="header">
-            <div class="name-tag">Evaldas Karmaza</div>
+    <div class="bg-particles" id="particles"></div>
+
+    <div class="container">
+
+        <!-- ===== HERO ===== -->
+        <div class="hero">
+            <div class="photo-ring">
+                <img src="Evaldas.jpg" alt="Evaldas Karmaza">
+            </div>
+
             <h1>Durys, kurios veda <em>kitur</em></h1>
-            <p class="intro">
-                Čia gimsta projektai, žaidimai ir eksperimentai. 
+            <p class="subtitle">
+                Čia gimsta projektai, žaidimai ir eksperimentai.<br>
                 Kai kurios durys atviros visiems, kai kurios — tik pakviestiems.
             </p>
-        </header>
+        </div>
 
-        <div class="section">
-            <div class="section-label">Diedulis · Rašymai ir mintys</div>
-            <a class="door" href="#">
-                <div class="door-name">Diedulio svetainė</div>
-                <div class="door-hint">Esė, istorijos, pamąstymai</div>
-                <div class="door-badge">greitai</div>
+        <!-- ===== DIEDULIS ===== -->
+        <div class="door-section">
+            <div class="door-label">Diedulis · Rašymai ir mintys</div>
+            <a href="#" class="door">
+                <span class="door-badge badge-soon">greitai</span>
+                <div class="door-title">Diedulio svetainė</div>
+                <div class="door-desc">Esė, istorijos, pamąstymai</div>
             </a>
         </div>
 
-        <div class="section">
-            <div class="section-label">Mopsis · Profesinė veikla</div>
-            <a class="door" href="https://mopsis.info">
-                <div class="door-name">mopsis.info</div>
-                <div class="door-hint">Seminarai mokykloms, konsultacijos</div>
-                <div class="door-badge open">atvira</div>
+        <!-- ===== MOPSIS ===== -->
+        <div class="door-section">
+            <div class="door-label">Mopsis · Profesinė veikla</div>
+            <a href="https://mopsis.info" class="door" target="_blank">
+                <span class="door-badge badge-open">atvira</span>
+                <div class="door-title">mopsis.info</div>
+                <div class="door-desc">Seminarai mokykloms, konsultacijos</div>
             </a>
         </div>
 
-        <div class="section">
-            <div class="section-label">Jaunimui</div>
-            <a class="door" href="#" style="border-bottom: none;">
-                <div class="door-name">Erdvė mokiniams ir paaugliams</div>
-                <div class="door-hint">Žaidimai, testai ir įrankiai</div>
+        <!-- ===== JAUNIMUI ===== -->
+        <div class="door-section">
+            <div class="door-label">Jaunimui</div>
+            <div class="door" style="cursor: default;">
+                <div class="door-title">Erdvė mokiniams ir paaugliams</div>
+                <div class="door-desc">Žaidimai, testai ir įrankiai</div>
+
+                <div class="sub-doors">
+                    <a href="#" class="sub-door">
+                        <div class="sub-door-title">Mokymosi motyvacija</div>
+                        <div class="sub-door-desc">Kodėl verta ir kaip pradėti</div>
+                    </a>
+                    <a href="#" class="sub-door">
+                        <div class="sub-door-title">Emocijų žemėlapis</div>
+                        <div class="sub-door-desc">Atpažink, ką jauti</div>
+                    </a>
+                    <a href="#" class="sub-door">
+                        <div class="sub-door-title">Draugystė ir konfliktai</div>
+                        <div class="sub-door-desc">Kai sunku su kitais</div>
+                    </a>
+                    <a href="#" class="sub-door">
+                        <div class="sub-door-title">Kas aš esu?</div>
+                        <div class="sub-door-desc">Savęs pažinimo žaidimas</div>
+                    </a>
+                    <a href="#" class="sub-door">
+                        <div class="sub-door-title">Streso valdymas</div>
+                        <div class="sub-door-desc">Pratimai ir technikos</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ŽAIDIMAI (NAUJAS!) ===== -->
+        <div class="door-section">
+            <div class="door-label">Žaidimai · Keisti dalykai</div>
+            <a href="zaidimai/" class="door">
+                <span class="door-badge badge-new">Naujas!</span>
+                <div class="door-title">🎈 Keisti žaidimai</div>
+                <div class="door-desc">Čia niekas nelaimi ir niekas nepralaimi. Tiesiog vyksta keisti dalykai.</div>
             </a>
-            <div class="sub-doors">
-                <a class="sub-door" href="#">
-                    <div class="sub-door-name">Mokymosi motyvacija</div>
-                    <div class="sub-door-hint">Kodėl verta ir kaip pradėti</div>
+        </div>
+
+        <!-- ===== AR ŽINOJAI? ===== -->
+        <div class="door-section">
+            <div class="door-label">Ar žinojai?</div>
+            <a href="#" class="door">
+                <span class="door-badge badge-soon">greitai</span>
+                <div class="door-title">Žinių kambarys</div>
+                <div class="door-desc">Faktai, quizai ir netikėti atradimai</div>
+            </a>
+        </div>
+
+        <!-- ===== ARTIMIESIEMS ===== -->
+        <div class="door-section">
+            <div class="door-label">Artimiesiems</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <a href="#" class="door" style="margin-bottom: 0;">
+                    <span class="door-badge badge-locked">užrakinta</span>
+                    <div class="door-title">Linui</div>
+                    <div class="door-desc">Brolio kambarys</div>
                 </a>
-                <a class="sub-door" href="#">
-                    <div class="sub-door-name">Emocijų žemėlapis</div>
-                    <div class="sub-door-hint">Atpažink, ką jauti</div>
-                </a>
-                <a class="sub-door" href="#">
-                    <div class="sub-door-name">Draugystė ir konfliktai</div>
-                    <div class="sub-door-hint">Kai sunku su kitais</div>
-                </a>
-                <a class="sub-door" href="#">
-                    <div class="sub-door-name">Kas aš esu?</div>
-                    <div class="sub-door-hint">Savęs pažinimo žaidimas</div>
-                </a>
-                <a class="sub-door" href="#">
-                    <div class="sub-door-name">Streso valdymas</div>
-                    <div class="sub-door-hint">Pratimai ir technikos</div>
+                <a href="#" class="door" style="margin-bottom: 0;">
+                    <span class="door-badge badge-locked">užrakinta</span>
+                    <div class="door-title">Karmazoms</div>
+                    <div class="door-desc">Giminės erdvė</div>
                 </a>
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-label">Ar žinojai?</div>
-            <a class="door" href="#">
-                <div class="door-name">Žinių kambarys</div>
-                <div class="door-hint">Faktai, quizai ir netikėti atradimai</div>
-                <div class="door-badge">greitai</div>
-            </a>
-        </div>
-
-        <div class="section">
-            <div class="section-label">Artimiesiems</div>
-            <a class="door" href="#">
-                <div class="door-name">Linui</div>
-                <div class="door-hint">Brolio kambarys</div>
-                <div class="door-badge locked">užrakinta</div>
-            </a>
-            <a class="door" href="#">
-                <div class="door-name">Karmazoms</div>
-                <div class="door-hint">Giminės erdvė</div>
-                <div class="door-badge locked">užrakinta</div>
-            </a>
-        </div>
-
-        <footer class="footer">
-            <div class="footer-line">Kaunas · 2026</div>
-            <div class="footer-line">
-                <a href="https://mopsis.info">mopsis.info</a> · 
+        <!-- ===== FOOTER ===== -->
+        <div class="footer">
+            <p>Kaunas · 2026</p>
+            <p>
+                <a href="https://mopsis.info">mopsis.info</a> ·
                 <a href="https://buru.guru">buru.guru</a>
-            </div>
-        </footer>
+            </p>
+        </div>
+
     </div>
+
+    <script>
+        // Background particles
+        const c = document.getElementById('particles');
+        for (let i = 0; i < 12; i++) {
+            const s = document.createElement('span');
+            const size = 4 + Math.random() * 8;
+            s.style.width = size + 'px';
+            s.style.height = size + 'px';
+            s.style.left = Math.random() * 100 + '%';
+            s.style.animationDuration = (12 + Math.random() * 20) + 's';
+            s.style.animationDelay = (Math.random() * 15) + 's';
+            c.appendChild(s);
+        }
+    </script>
+
 </body>
 </html>
