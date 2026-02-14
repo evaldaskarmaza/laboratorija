@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaldo Laboratorija</title>
+    <title>Evaldas Karmaza</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bone: #e8e0d4;
@@ -17,11 +17,7 @@
             --deep: #0d0d0c;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: var(--deep);
@@ -40,149 +36,151 @@
             z-index: 1000;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
-        }
-
-        .container::before {
-            content: '';
-            position: absolute;
-            left: 2rem;
-            top: 10%;
-            bottom: 10%;
-            width: 1px;
-            background: linear-gradient(to bottom, transparent, var(--moss) 30%, var(--moss) 70%, transparent);
-            opacity: 0.3;
-        }
+        .page { max-width: 860px; margin: 0 auto; padding: 6vh 2rem 4rem; }
 
         .header {
-            padding-left: 2rem;
-            margin-bottom: 4rem;
-            animation: fadeIn 1.5s ease-out;
+            margin-bottom: 5rem;
+            animation: fadeIn 1.2s ease-out;
         }
 
-        .sigil {
-            font-size: 0.7rem;
-            letter-spacing: 0.4em;
+        .name-tag {
+            font-size: 0.65rem;
+            letter-spacing: 0.5em;
             text-transform: uppercase;
             color: var(--moss-light);
             margin-bottom: 1.5rem;
             font-weight: 300;
         }
 
-        .sigil span { color: var(--amber); }
-
         h1 {
             font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-size: clamp(2.2rem, 5.5vw, 4rem);
             font-weight: 400;
-            line-height: 1.1;
-            margin-bottom: 1rem;
-            color: var(--bone);
+            line-height: 1.15;
+            margin-bottom: 1.2rem;
         }
 
-        h1 em {
-            font-style: italic;
-            color: var(--amber);
-        }
+        h1 em { font-style: italic; color: var(--amber); }
 
-        .subtitle {
-            font-size: 0.85rem;
+        .intro {
+            font-size: 0.82rem;
             color: var(--fog);
             font-weight: 300;
-            line-height: 1.7;
-            max-width: 500px;
-            opacity: 0.7;
+            line-height: 1.8;
+            max-width: 520px;
+            opacity: 0.6;
         }
 
-        .rooms {
-            padding-left: 2rem;
-            margin-bottom: 4rem;
-            animation: fadeIn 2s ease-out 0.3s both;
+        .section {
+            margin-bottom: 3.5rem;
+            animation: fadeIn 1.5s ease-out both;
         }
 
-        .rooms-label {
-            font-size: 0.65rem;
-            letter-spacing: 0.3em;
+        .section:nth-child(2) { animation-delay: 0.15s; }
+        .section:nth-child(3) { animation-delay: 0.3s; }
+        .section:nth-child(4) { animation-delay: 0.45s; }
+        .section:nth-child(5) { animation-delay: 0.6s; }
+
+        .section-label {
+            font-size: 0.6rem;
+            letter-spacing: 0.35em;
             text-transform: uppercase;
             color: var(--moss);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             font-weight: 400;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(74, 90, 60, 0.15);
         }
 
-        .room {
+        .door {
             display: block;
-            padding: 1rem 0;
-            border-bottom: 1px solid rgba(74, 90, 60, 0.15);
+            padding: 0.9rem 0;
+            border-bottom: 1px solid rgba(74, 90, 60, 0.08);
             text-decoration: none;
             color: var(--bone);
-            transition: all 0.4s ease;
+            transition: all 0.35s ease;
             position: relative;
         }
 
-        .room:hover {
+        .door:hover {
             padding-left: 1rem;
             color: var(--amber);
         }
 
-        .room:hover .room-status {
-            color: var(--amber);
-            opacity: 1;
-        }
+        .door:hover .door-badge { color: var(--amber); opacity: 1; }
 
-        .room-name {
+        .door-name {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 0.2rem;
         }
 
-        .room-desc {
-            font-size: 0.75rem;
+        .door-hint {
+            font-size: 0.72rem;
             color: var(--fog);
-            opacity: 0.5;
+            opacity: 0.4;
             font-weight: 300;
         }
 
-        .room-status {
+        .door-badge {
             position: absolute;
             right: 0;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 0.6rem;
-            letter-spacing: 0.15em;
+            font-size: 0.58rem;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
             color: var(--moss);
+            opacity: 0.35;
+            transition: all 0.35s ease;
+        }
+
+        .door-badge.open { color: var(--moss-light); opacity: 0.75; }
+        .door-badge.open::before { content: '● '; color: var(--moss-light); }
+        .door-badge.locked::before { content: '○ '; }
+
+        .sub-doors {
+            padding-left: 1.5rem;
+            border-left: 1px solid rgba(74, 90, 60, 0.1);
+            margin-top: 0.3rem;
+        }
+
+        .sub-door {
+            display: block;
+            padding: 0.6rem 0;
+            text-decoration: none;
+            color: var(--fog);
+            transition: all 0.3s ease;
+            opacity: 0.6;
+        }
+
+        .sub-door:hover { padding-left: 0.8rem; color: var(--amber); opacity: 1; }
+
+        .sub-door-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .sub-door-hint {
+            font-size: 0.65rem;
+            color: var(--fog);
             opacity: 0.4;
-            transition: all 0.4s ease;
-        }
-
-        .room-status.active {
-            color: var(--moss-light);
-            opacity: 0.8;
-        }
-
-        .room-status.active::before {
-            content: '● ';
-            color: var(--moss-light);
+            font-weight: 300;
         }
 
         .footer {
-            padding-left: 2rem;
-            animation: fadeIn 2s ease-out 0.6s both;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(74, 90, 60, 0.1);
+            animation: fadeIn 2s ease-out 0.8s both;
         }
 
         .footer-line {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--fog);
-            opacity: 0.3;
+            opacity: 0.25;
             font-weight: 300;
             line-height: 2;
         }
@@ -190,104 +188,135 @@
         .footer-line a {
             color: var(--moss-light);
             text-decoration: none;
-            border-bottom: 1px solid rgba(107, 125, 90, 0.3);
+            border-bottom: 1px solid rgba(107, 125, 90, 0.2);
             transition: all 0.3s ease;
         }
 
-        .footer-line a:hover {
-            color: var(--amber);
-            border-color: var(--amber);
-        }
+        .footer-line a:hover { color: var(--amber); border-color: var(--amber); }
 
-        .glow {
-            position: fixed;
-            width: 400px;
-            height: 400px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(74, 90, 60, 0.08), transparent 70%);
-            top: 20%;
-            right: -100px;
-            pointer-events: none;
-            animation: drift 12s ease-in-out infinite alternate;
+        .glow { position: fixed; border-radius: 50%; pointer-events: none; }
+
+        .glow-1 {
+            width: 450px; height: 450px;
+            background: radial-gradient(circle, rgba(74, 90, 60, 0.07), transparent 70%);
+            top: 15%; right: -120px;
+            animation: drift 14s ease-in-out infinite alternate;
         }
 
         .glow-2 {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(196, 148, 74, 0.05), transparent 70%);
-            bottom: 10%;
-            left: -50px;
-            pointer-events: none;
-            animation: drift 15s ease-in-out infinite alternate-reverse;
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(196, 148, 74, 0.04), transparent 70%);
+            bottom: 8%; left: -80px;
+            animation: drift 17s ease-in-out infinite alternate-reverse;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes drift {
             from { transform: translate(0, 0); }
-            to { transform: translate(30px, -20px); }
+            to { transform: translate(25px, -15px); }
         }
 
         @media (max-width: 600px) {
-            .container { padding: 0 1.5rem; }
-            .container::before { left: 1.5rem; }
-            .header, .rooms, .footer { padding-left: 1.5rem; }
-            .room-status { display: none; }
+            .page { padding: 4vh 1.2rem 3rem; }
+            .door-badge { display: none; }
+            .sub-doors { padding-left: 1rem; }
         }
     </style>
 </head>
 <body>
-    <div class="glow"></div>
-    <div class="glow-2"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
 
-    <div class="container">
+    <div class="page">
         <header class="header">
-            <div class="sigil">Evaldas Karmaza · <span>Laboratorija</span></div>
-            <h1>Vieta, kur gimsta <em>eksperimentai</em></h1>
-            <p class="subtitle">
-                Interaktyvūs quizai, anketos, žaidimai ir kiti bandymai. 
-                Kai kurie kambariai atviri visiems, kai kurie — tik pakviestiems.
+            <div class="name-tag">Evaldas Karmaza</div>
+            <h1>Durys, kurios veda <em>kitur</em></h1>
+            <p class="intro">
+                Čia gimsta projektai, žaidimai ir eksperimentai. 
+                Kai kurios durys atviros visiems, kai kurios — tik pakviestiems.
             </p>
         </header>
 
-        <section class="rooms">
-            <div class="rooms-label">Kambariai</div>
-
-            <a class="room" href="#">
-                <div class="room-name">Paganelio quizas</div>
-                <div class="room-desc">32 faktai, vienas žaidimas</div>
-                <div class="room-status">greitai</div>
+        <div class="section">
+            <div class="section-label">Diedulis · Rašymai ir mintys</div>
+            <a class="door" href="#">
+                <div class="door-name">Diedulio svetainė</div>
+                <div class="door-hint">Esė, istorijos, pamąstymai</div>
+                <div class="door-badge">greitai</div>
             </a>
+        </div>
 
-            <a class="room" href="#">
-                <div class="room-name">Trupės scena</div>
-                <div class="room-desc">Keturi personažai, vienas pasirinkimas</div>
-                <div class="room-status">greitai</div>
+        <div class="section">
+            <div class="section-label">Mopsis · Profesinė veikla</div>
+            <a class="door" href="https://mopsis.info">
+                <div class="door-name">mopsis.info</div>
+                <div class="door-hint">Seminarai mokykloms, konsultacijos</div>
+                <div class="door-badge open">atvira</div>
             </a>
+        </div>
 
-            <a class="room" href="#">
-                <div class="room-name">Po seminaro</div>
-                <div class="room-desc">Grįžtamojo ryšio anketa</div>
-                <div class="room-status">greitai</div>
+        <div class="section">
+            <div class="section-label">Jaunimui</div>
+            <a class="door" href="#" style="border-bottom: none;">
+                <div class="door-name">Erdvė mokiniams ir paaugliams</div>
+                <div class="door-hint">Žaidimai, testai ir įrankiai</div>
             </a>
+            <div class="sub-doors">
+                <a class="sub-door" href="#">
+                    <div class="sub-door-name">Mokymosi motyvacija</div>
+                    <div class="sub-door-hint">Kodėl verta ir kaip pradėti</div>
+                </a>
+                <a class="sub-door" href="#">
+                    <div class="sub-door-name">Emocijų žemėlapis</div>
+                    <div class="sub-door-hint">Atpažink, ką jauti</div>
+                </a>
+                <a class="sub-door" href="#">
+                    <div class="sub-door-name">Draugystė ir konfliktai</div>
+                    <div class="sub-door-hint">Kai sunku su kitais</div>
+                </a>
+                <a class="sub-door" href="#">
+                    <div class="sub-door-name">Kas aš esu?</div>
+                    <div class="sub-door-hint">Savęs pažinimo žaidimas</div>
+                </a>
+                <a class="sub-door" href="#">
+                    <div class="sub-door-name">Streso valdymas</div>
+                    <div class="sub-door-hint">Pratimai ir technikos</div>
+                </a>
+            </div>
+        </div>
 
-            <a class="room" href="#">
-                <div class="room-name">Piloto legenda</div>
-                <div class="room-desc">Pirmasis eksponatas</div>
-                <div class="room-status active">atvira</div>
+        <div class="section">
+            <div class="section-label">Ar žinojai?</div>
+            <a class="door" href="#">
+                <div class="door-name">Žinių kambarys</div>
+                <div class="door-hint">Faktai, quizai ir netikėti atradimai</div>
+                <div class="door-badge">greitai</div>
             </a>
-        </section>
+        </div>
+
+        <div class="section">
+            <div class="section-label">Artimiesiems</div>
+            <a class="door" href="#">
+                <div class="door-name">Linui</div>
+                <div class="door-hint">Brolio kambarys</div>
+                <div class="door-badge locked">užrakinta</div>
+            </a>
+            <a class="door" href="#">
+                <div class="door-name">Karmazoms</div>
+                <div class="door-hint">Giminės erdvė</div>
+                <div class="door-badge locked">užrakinta</div>
+            </a>
+        </div>
 
         <footer class="footer">
-            <div class="footer-line">Kaunas, 2026</div>
+            <div class="footer-line">Kaunas · 2026</div>
             <div class="footer-line">
-                <a href="https://buru.guru">buru.guru</a> · 
-                <a href="https://mopsis.info">mopsis.info</a>
+                <a href="https://mopsis.info">mopsis.info</a> · 
+                <a href="https://buru.guru">buru.guru</a>
             </div>
         </footer>
     </div>
