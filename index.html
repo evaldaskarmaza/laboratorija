@@ -231,6 +231,53 @@
             color: var(--bg-deep);
         }
 
+        /* ===== Drama door special style ===== */
+        .door-drama {
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+            border-color: rgba(196, 69, 60, 0.2);
+        }
+
+        .door-drama:hover {
+            border-color: rgba(196, 69, 60, 0.5);
+            box-shadow: 0 8px 30px rgba(196, 69, 60, 0.1);
+        }
+
+        .door-drama::before {
+            background: linear-gradient(90deg, transparent, rgba(196, 69, 60, 0.04), transparent);
+        }
+
+        .door-drama .door-title {
+            color: #e8e4df;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .door-drama .door-title .drama-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #c4453c;
+            border-radius: 50%;
+            margin-left: 4px;
+            vertical-align: middle;
+            animation: dramaPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes dramaPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .door-drama .door-desc {
+            color: #9a9590;
+            font-style: italic;
+        }
+
+        .badge-drama {
+            background: #c4453c;
+            color: #0a0a0a;
+        }
+
         /* ===== Sub-doors (Jaunimui, Artimiesiems) ===== */
         .sub-doors {
             display: grid;
@@ -332,6 +379,16 @@
                 <span class="door-badge badge-open">atvira</span>
                 <div class="door-title">mopsis.info</div>
                 <div class="door-desc">Seminarai mokykloms, konsultacijos</div>
+            </a>
+        </div>
+
+        <!-- ===== DRAMA ===== -->
+        <div class="door-section">
+            <div class="door-label">Drama · Panėrimai</div>
+            <a href="drama/" class="door door-drama">
+                <span class="door-badge badge-drama">nauja</span>
+                <div class="door-title">Drama<span class="drama-dot"></span></div>
+                <div class="door-desc">Psichologija · psichodrama · gyvenimas. Dešimt minučių į temą, kuri dega.</div>
             </a>
         </div>
 
